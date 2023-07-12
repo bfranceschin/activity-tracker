@@ -27,6 +27,7 @@ Stop the application by closing the GUI window or pressing the Esc key.
 
 ## Credits
 This project was mainly developed with the guidance and assistance of OpenAI's GPT-4
+[Prompt link](https://chat.openai.com/share/b1c25be1-9c47-4e64-8800-66ffe866e674)
 
 ## License
 This project is licensed under the terms of the MIT license.
