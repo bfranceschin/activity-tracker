@@ -2,6 +2,7 @@ from pynput import keyboard
 import tkinter as tk
 import datetime
 import json
+import os
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -11,8 +12,16 @@ class Application(tk.Frame):
         self.create_widgets()
         self.last_key_press_time = datetime.datetime.now()  # Initialize the last key press time
         self.work_time = datetime.timedelta()  # Initialize work time
-        self.work_intervals = [{'start': self.last_key_press_time, 'end': self.last_key_press_time}]  # Initialize work intervals
 
+        # Load work intervals from the JSON file if it exists
+        if os.path.isfile('work_intervals.json'):
+            with open('work_intervals.json', 'r') as f:
+                work_intervals_str = json.load(f)
+            # Convert strings in the ISO 8601 format to datetime.datetime objects
+            self.work_intervals = [{'start': datetime.datetime.fromisoformat(interval['start']), 'end': datetime.datetime.fromisoformat(interval['end'])} for interval in work_intervals_str]
+        else:
+            self.work_intervals = [{'start': self.last_key_press_time, 'end': self.last_key_press_time}]  # Initialize work intervals
+    
     def create_widgets(self):
         self.last_key_press_label = tk.Label(self)
         self.last_key_press_label["text"] = "Last key press: N/A"
