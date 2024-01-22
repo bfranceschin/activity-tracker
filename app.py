@@ -44,6 +44,11 @@ class Application(tk.Frame):
 
     def update_last_key_press_time(self):
         current_time = datetime.datetime.now()
+
+        # If the date of the current time is different from the date of self.last_key_press_time, reset self.work_time to zero
+        if current_time.date() != self.last_key_press_time.date():
+            self.work_time = datetime.timedelta()
+
         elapsed_time = current_time - self.last_key_press_time
         self.last_key_press_time = current_time  # Update the last key press time
 
