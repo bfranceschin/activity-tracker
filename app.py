@@ -21,6 +21,13 @@ class Application(tk.Frame):
             self.work_intervals = [{'start': datetime.datetime.fromisoformat(interval['start']), 'end': datetime.datetime.fromisoformat(interval['end'])} for interval in work_intervals_str]
         else:
             self.work_intervals = [{'start': self.last_key_press_time, 'end': self.last_key_press_time}]  # Initialize work intervals
+        
+        # Process the intervals
+        for interval in self.work_intervals:
+            interval_duration = interval['end'] - interval['start']
+            # If the interval started on the current day, add its duration to self.work_time
+            if interval['start'].date() == datetime.datetime.now().date():
+                self.work_time += interval_duration
     
     def create_widgets(self):
         self.last_key_press_label = tk.Label(self)
