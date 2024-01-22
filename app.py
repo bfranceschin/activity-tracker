@@ -1,6 +1,7 @@
 from pynput import keyboard
 import tkinter as tk
 import datetime
+import json
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -47,6 +48,14 @@ class Application(tk.Frame):
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
+    
+    def save_work_intervals(self):
+        # Convert datetime.datetime objects to strings in the ISO 8601 format
+        work_intervals_str = [{'start': interval['start'].isoformat(), 'end': interval['end'].isoformat()} for interval in self.work_intervals]
+        with open('work_intervals.json', 'w') as f:
+            json.dump(work_intervals_str, f)
+        # Schedule the next save operation to be performed after 5 minutes
+        self.master.after(300000, self.save_work_intervals)
         
 
 root = tk.Tk()
@@ -60,6 +69,7 @@ listener = keyboard.Listener(on_press=on_press)
 listener.start()
 
 # Start the Tkinter event loop
+app.save_work_intervals()  # Start the save operation
 app.mainloop()
 
 # If the Tkinter event loop is exited, stop the listener
