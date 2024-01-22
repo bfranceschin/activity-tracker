@@ -10,6 +10,7 @@ class Application(tk.Frame):
         self.create_widgets()
         self.last_key_press_time = datetime.datetime.now()  # Initialize the last key press time
         self.work_time = datetime.timedelta()  # Initialize work time
+        self.work_intervals = [{'start': self.last_key_press_time, 'end': self.last_key_press_time}]  # Initialize work intervals
 
     def create_widgets(self):
         self.last_key_press_label = tk.Label(self)
@@ -29,9 +30,13 @@ class Application(tk.Frame):
         elapsed_time = current_time - self.last_key_press_time
         self.last_key_press_time = current_time  # Update the last key press time
 
-        # If elapsed time is less than 10 minutes, add it to work time
+        # If elapsed time is less than 10 minutes, update the end of the current interval
         if elapsed_time < datetime.timedelta(minutes=10):
             self.work_time += elapsed_time
+            self.work_intervals[-1]['end'] = current_time  # Update the end of the current interval
+        else:
+            # If elapsed time is greater than 10 minutes, start a new interval and make it the current interval
+            self.work_intervals.append({'start': current_time, 'end': current_time})
 
         self.last_key_press_label["text"] = "Last key press: " + current_time.strftime('%Y-%m-%d %H:%M:%S')
         self.elapsed_time_label["text"] = "Elapsed time: " + self.format_elapsed_time(elapsed_time)
