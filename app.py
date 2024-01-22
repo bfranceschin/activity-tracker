@@ -1,6 +1,6 @@
 from pynput import keyboard
 import tkinter as tk
-import time
+import datetime
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -8,8 +8,8 @@ class Application(tk.Frame):
         self.master = master
         self.pack()
         self.create_widgets()
-        self.last_key_press_time = time.time()  # Initialize the last key press time
-        self.work_time = 0  # Initialize work time
+        self.last_key_press_time = datetime.datetime.now()  # Initialize the last key press time
+        self.work_time = datetime.timedelta()  # Initialize work time
 
     def create_widgets(self):
         self.last_key_press_label = tk.Label(self)
@@ -25,25 +25,24 @@ class Application(tk.Frame):
         self.work_time_label.pack(side="top")
 
     def update_last_key_press_time(self):
-        current_time = time.time()
+        current_time = datetime.datetime.now()
         elapsed_time = current_time - self.last_key_press_time
         self.last_key_press_time = current_time  # Update the last key press time
 
-        # If elapsed time is less than 10 minutes (600 seconds), add it to work time
-        if elapsed_time < 600:
+        # If elapsed time is less than 10 minutes, add it to work time
+        if elapsed_time < datetime.timedelta(minutes=10):
             self.work_time += elapsed_time
 
-        self.last_key_press_label["text"] = "Last key press: " + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(current_time))
-        self.elapsed_time_label["text"] = "Elapsed time: " + self.format_time(elapsed_time)
-        self.work_time_label["text"] = "Work time: " + self.format_time(self.work_time)
+        self.last_key_press_label["text"] = "Last key press: " + current_time.strftime('%Y-%m-%d %H:%M:%S')
+        self.elapsed_time_label["text"] = "Elapsed time: " + self.format_elapsed_time(elapsed_time)
+        self.work_time_label["text"] = "Work time: " + self.format_elapsed_time(self.work_time)
 
-    def format_time(self, time_in_seconds):
-        hours = int(time_in_seconds // 3600)
-        time_in_seconds %= 3600
-        minutes = int(time_in_seconds // 60)
-        time_in_seconds %= 60
-        seconds = int(time_in_seconds)
-        return "{} hours, {} minutes, {} seconds".format(hours, minutes, seconds)
+    def format_elapsed_time(self, elapsed_time):
+        total_seconds = int(elapsed_time.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
+        
 
 root = tk.Tk()
 app = Application(master=root)
