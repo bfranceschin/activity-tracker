@@ -3,6 +3,7 @@ import tkinter as tk
 import datetime
 import json
 import os
+import calendar
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -28,6 +29,8 @@ class Application(tk.Frame):
             # If the interval started on the current day, add its duration to self.work_time
             if interval['start'].date() == datetime.datetime.now().date():
                 self.work_time += interval_duration
+        
+        self.update_weekday_labels()  # Update weekday labels
     
     def create_widgets(self):
         self.last_key_press_label = tk.Label(self)
@@ -42,12 +45,21 @@ class Application(tk.Frame):
         self.work_time_label["text"] = "Work time: 0.00 seconds"
         self.work_time_label.pack(side="top")
 
+        # Create text labels for each day of the week and store them in an array
+        self.weekday_labels = []
+        for i in range(7):
+            weekday_label = tk.Label(self)
+            weekday_label["text"] = calendar.day_name[i][:3] + ": 00:00:00"
+            weekday_label.pack(side="top")
+            self.weekday_labels.append(weekday_label)
+
     def update_last_key_press_time(self):
         current_time = datetime.datetime.now()
 
         # If the date of the current time is different from the date of self.last_key_press_time, reset self.work_time to zero
         if current_time.date() != self.last_key_press_time.date():
             self.work_time = datetime.timedelta()
+            self.update_weekday_labels()  # Update weekday labels
 
         elapsed_time = current_time - self.last_key_press_time
         self.last_key_press_time = current_time  # Update the last key press time
@@ -64,6 +76,10 @@ class Application(tk.Frame):
         self.elapsed_time_label["text"] = "Elapsed time: " + self.format_elapsed_time(elapsed_time)
         self.work_time_label["text"] = "Work time: " + self.format_elapsed_time(self.work_time)
 
+        # Update the label for the current day of the week
+        current_day_of_week = current_time.weekday()
+        self.weekday_labels[current_day_of_week]["text"] = calendar.day_name[current_day_of_week][:3] + ": " + self.format_elapsed_time(self.work_time)
+
     def format_elapsed_time(self, elapsed_time):
         total_seconds = int(elapsed_time.total_seconds())
         hours, remainder = divmod(total_seconds, 3600)
@@ -77,6 +93,23 @@ class Application(tk.Frame):
             json.dump(work_intervals_str, f)
         # Schedule the next save operation to be performed after 5 minutes
         self.master.after(300000, self.save_work_intervals)
+    
+    def update_weekday_labels(self):
+        current_day_of_week = datetime.datetime.now().weekday()
+        work_time_per_day = [datetime.timedelta() for _ in range(7)]  # Initialize work time per day
+
+        # Calculate work time per day
+        for interval in self.work_intervals:
+            interval_day_of_week = interval['start'].weekday()
+            if interval['start'].isocalendar()[1] == datetime.datetime.now().isocalendar()[1]:  # If the interval is in the current week
+                work_time_per_day[interval_day_of_week] += interval['end'] - interval['start']
+
+        # Update weekday labels
+        for i in range(7):
+            if i > current_day_of_week:
+                self.weekday_labels[i]["text"] = calendar.day_name[i][:3] + ": -"
+            else:
+                self.weekday_labels[i]["text"] = calendar.day_name[i][:3] + ": " + self.format_elapsed_time(work_time_per_day[i])
         
 
 root = tk.Tk()
