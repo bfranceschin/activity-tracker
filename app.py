@@ -61,7 +61,7 @@ class Application(tk.Frame):
 
     def update_last_key_press_time(self):
         current_time = datetime.datetime.now()
-        current_week = current_time.isocalendar()[1]
+        current_year, current_week, _ = current_time.isocalendar()
 
         if current_week != self.current_week_number:
             self.last_week_total = self.current_week_total
@@ -107,21 +107,22 @@ class Application(tk.Frame):
     
     def update_weekday_labels(self):
         current_time = datetime.datetime.now()
-        current_week = current_time.isocalendar()[1]
+        current_year, current_week, _ = current_time.isocalendar()
         work_time_per_day = [datetime.timedelta() for _ in range(7)]
 
         self.current_week_total = datetime.timedelta()
         self.last_week_total = datetime.timedelta()
 
         for interval in self.work_intervals:
-            interval_week = interval['start'].isocalendar()[1]
+            interval_year, interval_week, _ = interval['start'].isocalendar()
             interval_day_of_week = interval['start'].weekday()
             interval_duration = interval['end'] - interval['start']
 
-            if interval_week == current_week:
+            if interval_year == current_year and interval_week == current_week:
                 work_time_per_day[interval_day_of_week] += interval_duration
                 self.current_week_total += interval_duration
-            elif interval_week == current_week - 1:
+            elif (interval_year == current_year and interval_week == current_week - 1) or \
+                 (interval_year == current_year - 1 and interval_week == 52 and current_week == 1):
                 self.last_week_total += interval_duration
 
         for i in range(7):
