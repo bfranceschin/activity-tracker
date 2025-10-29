@@ -11,18 +11,32 @@ class Application(tk.Frame):
         self.master = master
         self.pack()
         self.create_widgets()
-        self.last_key_press_time = datetime.datetime.now()
+        self.master.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        now = datetime.datetime.now()
         self.work_time = datetime.timedelta()
         self.current_week_total = datetime.timedelta()
         self.last_week_total = datetime.timedelta()
-        self.current_week_number = datetime.datetime.now().isocalendar()[1]
+        self.current_week_number = now.isocalendar()[1]
+
+        self.work_intervals = []
 
         if os.path.isfile('work_intervals.json'):
             with open('work_intervals.json', 'r') as f:
                 work_intervals_str = json.load(f)
-            self.work_intervals = [{'start': datetime.datetime.fromisoformat(interval['start']), 'end': datetime.datetime.fromisoformat(interval['end'])} for interval in work_intervals_str]
+            self.work_intervals = [
+                {
+                    'start': datetime.datetime.fromisoformat(interval['start']),
+                    'end': datetime.datetime.fromisoformat(interval['end'])
+                }
+                for interval in work_intervals_str
+            ]
+
+        if self.work_intervals:
+            self.last_key_press_time = self.work_intervals[-1]['end']
         else:
-            self.work_intervals = [{'start': self.last_key_press_time, 'end': self.last_key_press_time}]
+            self.last_key_press_time = now
+            self.work_intervals = [{'start': now, 'end': now}]
         
         for interval in self.work_intervals:
             interval_duration = interval['end'] - interval['start']
@@ -97,13 +111,19 @@ class Application(tk.Frame):
         minutes, seconds = divmod(remainder, 60)
         return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
     
-    def save_work_intervals(self):
+    def save_work_intervals(self, schedule_next=True):
         # Convert datetime.datetime objects to strings in the ISO 8601 format
         work_intervals_str = [{'start': interval['start'].isoformat(), 'end': interval['end'].isoformat()} for interval in self.work_intervals]
         with open('work_intervals.json', 'w') as f:
             json.dump(work_intervals_str, f)
         # Schedule the next save operation to be performed after 5 minutes
-        self.master.after(300000, self.save_work_intervals)
+        if schedule_next:
+            self.master.after(60000, self.save_work_intervals)
+
+    def on_close(self):
+        # Save immediately and prevent scheduling another save after the window closes
+        self.save_work_intervals(schedule_next=False)
+        self.master.destroy()
     
     def update_weekday_labels(self):
         current_time = datetime.datetime.now()
